@@ -1,7 +1,7 @@
 <p align="center">
   <a href="https://github.com/kalenwallin/hudltakehome">
     <img src="https://sc.hudl.com/favicon.svg" height="96">
-    <h3 align="center">Hudl Interview Takehome Test</h3>
+    <h3 align="center">Hudl Interview Take-home Test</h3>
   </a>
 </p>
 
@@ -9,7 +9,7 @@
 
 # Introduction
 
-This repo contains a testing suite for the Hudl login system and seeks to fulfill the requirements of the Quality Assurance Engineer I interview takehome test.
+This repo contains a testing suite for the Hudl login system and seeks to fulfill the requirements of the **Quality Assurance Engineer I** interview take-home test.
 
 # Developing Locally
 
