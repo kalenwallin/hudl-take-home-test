@@ -9,7 +9,7 @@
 
 # Introduction
 
-This repo contains a testing suite for the Hudl login system and seeks to fulfill the requirements of the **Quality Assurance Engineer I** interview take-home test.
+This repo contains a testing suite for the Hudl login system and seeks to fulfill the requirements of the **Quality Assurance Engineer II** interview take-home test.
 
 # Developing Locally
 
