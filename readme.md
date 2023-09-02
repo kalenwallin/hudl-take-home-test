@@ -61,7 +61,7 @@ To learn more about Python, Selenium, and PyTest, take a look at the following r
 
 ---
 
-# What I Learned From This Take-home Test
+# Lessons Learned
 
 I picked up several best practices and troubleshooting tips through hands-on experience.
 
