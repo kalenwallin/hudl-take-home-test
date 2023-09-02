@@ -36,28 +36,25 @@ class TestLogin:
         Raises:
             Exception: If the login page fails to load correctly.
         """
-        # Make sure the login page is loaded correctly
-        if self.test_login_page_ui(driver):
-            # Load environment variables if necessary
-            load_dotenv()
-            if email is None:
-                email = os.getenv("HUDL_EMAIL")
-            if password is None:
-                password = os.getenv("HUDL_PASSWORD")
 
-            # Fill in the email
-            email_field = driver.find_element(By.ID, "email")
-            email_field.send_keys(email)
+        # Load environment variables if necessary
+        load_dotenv()
+        if email is None:
+            email = os.getenv("HUDL_EMAIL")
+        if password is None:
+            password = os.getenv("HUDL_PASSWORD")
 
-            # Fill in the password
-            password_field = driver.find_element(By.ID, "password")
-            password_field.send_keys(password)
+        # Fill in the email
+        email_field = driver.find_element(By.ID, "email")
+        email_field.send_keys(email)
 
-            # Click the log in/continue button
-            login_button = driver.find_element(By.ID, "logIn")
-            login_button.click()
-        else:
-            raise Exception("Login page failed to load correctly")
+        # Fill in the password
+        password_field = driver.find_element(By.ID, "password")
+        password_field.send_keys(password)
+
+        # Click the log in/continue button
+        login_button = driver.find_element(By.ID, "logIn")
+        login_button.click()
 
     def assert_login(self, driver):
         """
@@ -187,9 +184,6 @@ class TestLogin:
 
         Args:
             driver (Chrome): The Selenium WebDriver Chrome object instance.
-
-        Returns:
-            True if all assertions pass
         """
 
         driver.get("https://www.hudl.com/login")
@@ -224,5 +218,3 @@ class TestLogin:
 
         create_account_button_bottom = driver.find_element(By.ID, "btn-show-signup")
         assert create_account_button_bottom.text == "Create Account"
-
-        return True
