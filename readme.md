@@ -26,6 +26,12 @@ Clone the repo:
 git clone https://github.com/kalenwallin/hudl-takehome-test
 ```
 
+Create a virtual environment:
+
+```bash
+python -m venv .venv
+```
+
 Install the dependencies:
 
 ```powershell
