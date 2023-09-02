@@ -1,0 +1,37 @@
+# Ignore Selenium generated files
+logs/
+reports/
+results/
+
+# Ignore Chromedriver binary
+chromedriver*
+
+# Ignore Python cache folders
+__pycache__/
+*.pyc
+
+# Ignore PyTest generated files
+.pytest_cache/
+
+# Ignore virtual environments
+venv/
+.venv/
+env/
+
+# Ignore IDE files
+.idea/
+.vscode/
+
+# Ignore test output files
+*.log
+
+# Ignore OS generated files
+.DS_Store
+Thumbs.db
+
+# Ignore uploaded files
+*.csv
+*.xlsx
+
+# Ignore secrets
+.env
