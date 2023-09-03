@@ -13,9 +13,10 @@ This repo contains a testing suite for the Hudl login system and seeks to fulfil
 
 # Developing Locally
 
-Make sure you have Chrome and Python 3.9 installed:
+Make sure you have Chrome, ChromeDriver, and Python 3.9 installed:
 
 * [Download Google Chrome](https://www.google.com/chrome/ "Download Google Chrome")
+* [Download ChromeDriver](https://chromedriver.chromium.org/home "Download ChromeDriver")
 * [Download Python 3.9](https://www.python.org/downloads/ "Download Python 3.9")
 
 ## Getting started
