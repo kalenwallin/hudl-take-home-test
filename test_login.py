@@ -1,6 +1,5 @@
 import os
 
-import chromedriver_binary  # Adds chromedriver binary to path
 import pytest
 from dotenv import load_dotenv
 from selenium import webdriver
@@ -13,7 +12,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 @pytest.fixture(scope="function")
 def driver():
     """
-    A PyTest fixture that sets up and tears down the Selenium webdriver Chrome instance.
+    A PyTest fixture that sets up and tears down the Selenium webdriver instance.
 
     Yields:
         A webdriver instance.
@@ -29,7 +28,7 @@ class TestLogin:
         Submits the login form using the provided email and password.
 
         Args:
-            driver (Chrome): The Selenium WebDriver Chrome object instance.
+            driver: The Selenium WebDriver object instance.
             email: The email address to use for login. Defaults to the `HUDL_EMAIL` environment variable.
             password: The password to use for login. Defaults to the `HUDL_PASSWORD` environment variable.
 
@@ -61,7 +60,7 @@ class TestLogin:
         Asserts successful login if the log out anchor is in the DOM.
 
         Args:
-            driver (Chrome): The Selenium WebDriver Chrome object instance.
+            driver: The Selenium WebDriver object instance.
         """
         # Wait for log out anchor in the DOM
         # If we can log out, we've successfully logged in
@@ -76,7 +75,7 @@ class TestLogin:
         Tests a valid login from the landing page
 
         Args:
-            driver (Chrome): The Selenium WebDriver Chrome object instance.
+            driver: The Selenium WebDriver object instance.
         """
         driver.get("https://www.hudl.com/")
 
@@ -99,7 +98,7 @@ class TestLogin:
         Test a valid login from the login page.
 
         Args:
-            driver (Chrome): The Selenium WebDriver Chrome object instance.
+            driver: The Selenium WebDriver object instance.
         """
         driver.get("https://www.hudl.com/login")
 
@@ -112,7 +111,7 @@ class TestLogin:
         Asserts that the error message displayed on the login form matches the expected error message based on the given type.
 
         Args:
-            driver (Chrome): The Selenium WebDriver Chrome object instance.
+            driver: The Selenium WebDriver object instance.
             type (str): The type of error message to check.
         """
         error_msg_selector = "[data-qa-id='undefined-text']"
@@ -136,7 +135,7 @@ class TestLogin:
         Expects "We don't recognize that email and/or password" UI error message
 
         Args:
-            driver (Chrome): The Selenium WebDriver Chrome object instance.
+            driver: The Selenium WebDriver object instance.
         """
         driver.get("https://www.hudl.com/login")
 
@@ -152,7 +151,7 @@ class TestLogin:
         Expects "We don't recognize that email and/or password" UI error message
 
         Args:
-            driver (Chrome): The Selenium WebDriver Chrome object instance.
+            driver: The Selenium WebDriver object instance.
         """
         driver.get("https://www.hudl.com/login")
 
@@ -168,7 +167,7 @@ class TestLogin:
         Expects "Please fill in all of the required fields" UI error message
 
         Args:
-            driver (Chrome): The Selenium WebDriver Chrome object instance.
+            driver: The Selenium WebDriver object instance.
         """
         driver.get("https://www.hudl.com/login")
 
@@ -183,7 +182,7 @@ class TestLogin:
         Test the login page user interface to load correctly.
 
         Args:
-            driver (Chrome): The Selenium WebDriver Chrome object instance.
+            driver: The Selenium WebDriver object instance.
         """
 
         driver.get("https://www.hudl.com/login")
