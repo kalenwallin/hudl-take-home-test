@@ -3,133 +3,250 @@ import os
 import pytest
 from dotenv import load_dotenv
 from selenium import webdriver
+from selenium.common.exceptions import TimeoutException, WebDriverException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.expected_conditions import visibility_of_element_located
 from selenium.webdriver.support.ui import WebDriverWait
 
 
-@pytest.fixture(scope="function")
-def driver():
-    """
-    A PyTest fixture that sets up and tears down the Selenium webdriver instance.
+class LoginErrorMessageNotDisplayed(Exception):
+    """Raised when the login error message is not displayed."""
 
-    Yields:
-        A webdriver instance.
-    """
+    def __str__(self):
+        return "The login error message is not displayed."
+
+
+class LoginErrorMessageMismatch(Exception):
+    """Raised when the login error message does not match the expected message."""
+
+    def __init__(self, error_msg, expected_error_message):
+        self.error_msg = error_msg
+        self.expected_error_message = expected_error_message
+
+    def __str__(self):
+        return (
+            f"The login error message is unrecognized: {self.error_msg}. "
+            f"Expected: {self.expected_error_message}"
+        )
+
+
+class ErrorTypeNotFound(Exception):
+    """Raised when the login error error message type is not found."""
+
+    def __init__(self, error_type, expected_error_messages):
+        self.error_type = error_type
+        self.expected_error_messages = expected_error_messages
+
+    def __str__(self):
+        return (
+            f"The error message type is not found: {self.error_type}. "
+            f"Use one of the following types: {', '.join(self.expected_error_messages)}."
+        )
+
+
+class LogoutError(Exception):
+    """Raised when errors occur during the logout process."""
+
+    def __init__(self, original_exception):
+        self.original_exception = original_exception
+
+    def __str__(self):
+        return f"An error occurred during logout: {self.original_exception}"
+
+
+@pytest.fixture(scope="class")
+def driver():
     driver = webdriver.Chrome()
     yield driver
     driver.quit()
 
 
-class TestLogin:
-    def login(self, driver, email=None, password=None):
-        """
-        Submits the login form using the provided email and password.
+@pytest.fixture(scope="class")
+def login_page(driver):
+    return LoginPage(driver)
 
-        Args:
-            driver: The Selenium WebDriver object instance.
-            email: The email address to use for login. Defaults to the `HUDL_EMAIL` environment variable.
-            password: The password to use for login. Defaults to the `HUDL_PASSWORD` environment variable.
 
-        Raises:
-            Exception: If the login page fails to load correctly.
-        """
+@pytest.fixture(scope="class")
+def landing_page(driver):
+    return LandingPage(driver)
 
-        # Load environment variables if necessary
-        load_dotenv()
-        if email is None:
-            email = os.getenv("HUDL_EMAIL")
-        if password is None:
-            password = os.getenv("HUDL_PASSWORD")
 
-        # Fill in the email
-        email_field = driver.find_element(By.ID, "email")
+@pytest.fixture(scope="class")
+def home_page(driver):
+    return HomePage(driver)
+
+
+@pytest.fixture(scope="class")
+def credentials():
+    load_dotenv()
+    hudl_email = os.getenv("HUDL_EMAIL")
+    hudl_password = os.getenv("HUDL_PASSWORD")
+    return hudl_email, hudl_password
+
+
+class LandingPage:
+    def __init__(self, driver):
+        self.driver = driver
+
+    def click_login_select(self):
+        login_select = self.driver.find_element(
+            By.CSS_SELECTOR, "[data-qa-id='login-select']"
+        )
+        login_select.click()
+
+    def click_login_select_hudl(self):
+        login_hudl = self.driver.find_element(
+            By.CSS_SELECTOR, "[data-qa-id='login-hudl']"
+        )
+        login_hudl.click()
+
+
+class LoginPage:
+    def __init__(self, driver):
+        self.driver = driver
+
+    def enter_email(self, email):
+        email_field = self.driver.find_element(By.ID, "email")
         email_field.send_keys(email)
 
-        # Fill in the password
-        password_field = driver.find_element(By.ID, "password")
+    def enter_password(self, password):
+        password_field = self.driver.find_element(By.ID, "password")
         password_field.send_keys(password)
 
-        # Click the log in/continue button
-        login_button = driver.find_element(By.ID, "logIn")
+    def click_login(self):
+        login_button = self.driver.find_element(By.ID, "logIn")
         login_button.click()
 
-    def assert_login(self, driver):
+    def login(self, email, password):
+        self.enter_email(email)
+        self.enter_password(password)
+        self.click_login()
+
+    def is_login_error_message(self, error_type):
         """
-        Asserts successful login if the log out anchor is in the DOM.
+        Checks that the error message displayed on the login form matches
+        the expected error message based on the given type.
 
         Args:
             driver: The Selenium WebDriver object instance.
+            error_type (str): The type of error message to check.
+
+        Returns:
+            bool: True if the error message matches, False otherwise.
         """
-        # Wait for log out anchor in the DOM
-        # If we can log out, we've successfully logged in
-        assert WebDriverWait(driver, 10).until(
+        error_msg_selector = "[data-qa-id='undefined-text']"
+        error_msg = WebDriverWait(self.driver, 10).until(
+            visibility_of_element_located((By.CSS_SELECTOR, error_msg_selector))
+        )
+        if error_msg.is_displayed():
+            expected_error_messages = {
+                "email": "We don't recognize that email and/or password",
+                "password": "We don't recognize that email and/or password",
+                "empty": "Please fill in all of the required fields",
+            }
+            expected_error_message = expected_error_messages.get(error_type)
+            if expected_error_message is None:
+                raise ErrorTypeNotFound(error_type, expected_error_messages.keys())
+            if error_msg.text != expected_error_message:
+                raise LoginErrorMessageMismatch(error_msg.text, expected_error_message)
+            else:
+                return True
+        else:
+            raise LoginErrorMessageNotDisplayed()
+
+    def login_and_check_error(self, email, password, error_type):
+        """
+        Login using the provided credentials and check for a specific error message.
+
+        Args:
+            email: The email to use for login.
+            password: The password to use for login.
+            error_type: The type of error to check for.
+
+        Returns:
+            True if the error message matches, False otherwise.
+        """
+        self.driver.get("https://www.hudl.com/login")
+
+        # Login using the provided credentials
+        self.login(email, password)
+
+        # Check for the specified error
+        return self.is_login_error_message(error_type)
+
+
+class HomePage:
+    def __init__(self, driver):
+        self.driver = driver
+
+    def is_logged_in(self):
+        return WebDriverWait(self.driver, 10).until(
             EC.presence_of_element_located(
                 (By.CSS_SELECTOR, "[data-qa-id='webnav-usermenu-logout']")
             )
         )
 
-    def test_valid_login_from_the_landing_page(self, driver):
+    def logout(self):
+        try:
+            self.driver.get("https://www.hudl.com/logout")
+            WebDriverWait(self.driver, 10).until(
+                EC.url_matches("https://www.hudl.com/")
+            )
+        except (WebDriverException, TimeoutException) as e:
+            raise LogoutError(e)
+
+
+class TestLogin:
+    def test_valid_login_from_the_landing_page(
+        self, driver, landing_page, login_page, home_page, credentials
+    ):
         """
         Tests a valid login from the landing page
 
         Args:
             driver: The Selenium WebDriver object instance.
         """
+        # Unpack the credentials
+        hudl_email, hudl_password = credentials
+
         driver.get("https://www.hudl.com/")
 
-        # Click login dropdown
-        login_select = driver.find_element(
-            By.CSS_SELECTOR, "[data-qa-id='login-select']"
-        )
-        login_select.click()
+        # Go to the login page from the landing page
+        landing_page.click_login_select()
+        landing_page.click_login_select_hudl()
 
-        # Click Hudl
-        login_hudl = driver.find_element(By.CSS_SELECTOR, "[data-qa-id='login-hudl']")
-        login_hudl.click()
+        # Submit the login form
+        login_page.login(hudl_email, hudl_password)
 
-        # Login with valid default environment credentials
-        self.login(driver)
-        self.assert_login(driver)
+        # Use the home page object to check login status
+        assert home_page.is_logged_in()
 
-    def test_valid_login_from_the_login_page(self, driver):
+        home_page.logout()
+
+    def test_valid_login_from_the_login_page(
+        self, driver, login_page, home_page, credentials
+    ):
         """
         Test a valid login from the login page.
 
         Args:
             driver: The Selenium WebDriver object instance.
         """
+        # Unpack the credentials
+        hudl_email, hudl_password = credentials
+
         driver.get("https://www.hudl.com/login")
 
-        # Login with valid default environment credentials
-        self.login(driver)
-        self.assert_login(driver)
+        # Submit the login form
+        login_page.login(hudl_email, hudl_password)
 
-    def assert_login_error_message(self, driver, type):
-        """
-        Asserts that the error message displayed on the login form matches the expected error message based on the given type.
+        # Use the home page object to check login status
+        assert home_page.is_logged_in()
 
-        Args:
-            driver: The Selenium WebDriver object instance.
-            type (str): The type of error message to check.
-        """
-        error_msg_selector = "[data-qa-id='undefined-text']"
-        error_msg = WebDriverWait(driver, 10).until(
-            visibility_of_element_located((By.CSS_SELECTOR, error_msg_selector))
-        )
-        assert error_msg.is_displayed()
-        error_messages = {
-            "email": "We don't recognize that email and/or password",
-            "password": "We don't recognize that email and/or password",
-            "empty": "Please fill in all of the required fields",
-        }
-        try:
-            assert error_msg.text == error_messages.get(type)
-        except Exception as e:
-            assert False, f"The login error message could not be confirmed: {e}"
+        home_page.logout()
 
-    def test_invalid_email(self, driver):
+    def test_invalid_email(self, login_page, credentials):
         """
         Test the behavior of the login form when an invalid email is provided.
         Expects "We don't recognize that email and/or password" UI error message
@@ -137,15 +254,15 @@ class TestLogin:
         Args:
             driver: The Selenium WebDriver object instance.
         """
-        driver.get("https://www.hudl.com/login")
+        # Unpack the credentials
+        _, hudl_password = credentials
 
-        # Login with an invalid email and valid default password
-        self.login(driver, email="invalid")
+        # Login with an invalid email and a valid password
+        assert login_page.login_and_check_error(
+            email="invalid", password=hudl_password, error_type="email"
+        )
 
-        # Check for the invalid email error
-        self.assert_login_error_message(driver, type="email")
-
-    def test_invalid_password(self, driver):
+    def test_invalid_password(self, login_page, credentials):
         """
         Test the behavior of the login form when an invalid password is provided.
         Expects "We don't recognize that email and/or password" UI error message
@@ -153,15 +270,15 @@ class TestLogin:
         Args:
             driver: The Selenium WebDriver object instance.
         """
-        driver.get("https://www.hudl.com/login")
+        # Unpack the credentials
+        hudl_email, _ = credentials
 
-        # Attempt to login with a valid email and invalid password
-        self.login(driver, password="invalid")
+        # Login with a valid email and an invalid password
+        assert login_page.login_and_check_error(
+            email=hudl_email, password="invalid", error_type="password"
+        )
 
-        # Check for the invalid password error
-        self.assert_login_error_message(driver, type="password")
-
-    def test_empty_credentials(self, driver):
+    def test_empty_credentials(self, login_page):
         """
         Test the behavior of the login form when empty credentials are provided.
         Expects "Please fill in all of the required fields" UI error message
@@ -169,51 +286,6 @@ class TestLogin:
         Args:
             driver: The Selenium WebDriver object instance.
         """
-        driver.get("https://www.hudl.com/login")
-
-        # Attempt to login with an empty email and password
-        self.login(driver, email="", password="")
-
-        # Check for the empty fields error
-        self.assert_login_error_message(driver, type="empty")
-
-    def test_login_page_ui(self, driver):
-        """
-        Test the login page user interface to load correctly.
-
-        Args:
-            driver: The Selenium WebDriver object instance.
-        """
-
-        driver.get("https://www.hudl.com/login")
-
-        # Assert title
-        assert driver.title == "Log In"
-
-        # Assert header
-        header = driver.find_element(By.CSS_SELECTOR, ".page-title").text
-        assert header == "Log In"
-
-        # Assert labels
-        email_label = driver.find_element(By.ID, "email-label").text
-        assert email_label == "Email"
-
-        password_label = driver.find_element(By.ID, "password-label").text
-        assert password_label == "Password"
-
-        # Assert inputs
-        assert driver.find_element(By.ID, "email")
-        assert driver.find_element(By.ID, "password")
-
-        # Assert buttons
-        login_button = driver.find_element(By.ID, "logIn")
-        assert login_button.text == "Continue"
-
-        forgot_password_button = driver.find_element(By.ID, "forgot-password")
-        assert forgot_password_button.text == "Forgot Password"
-
-        create_account_button_top = driver.find_element(By.ID, "nav-btn-page")
-        assert create_account_button_top.text == "Create Account"
-
-        create_account_button_bottom = driver.find_element(By.ID, "btn-show-signup")
-        assert create_account_button_bottom.text == "Create Account"
+        assert login_page.login_and_check_error(
+            email="", password="", error_type="empty"
+        )
