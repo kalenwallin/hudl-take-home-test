@@ -1,3 +1,4 @@
+import logging
 import os
 
 import pytest
@@ -14,7 +15,9 @@ class LoginErrorMessageNotDisplayed(Exception):
     """Raised when the login error message is not displayed."""
 
     def __str__(self):
-        return "The login error message is not displayed."
+        error_message = "The login error message is not displayed."
+        logging.error(error_message)
+        return error_message
 
 
 class LoginErrorMessageMismatch(Exception):
@@ -25,10 +28,12 @@ class LoginErrorMessageMismatch(Exception):
         self.expected_error_message = expected_error_message
 
     def __str__(self):
-        return (
+        error_message = (
             f"The login error message is unrecognized: {self.error_msg}. "
             f"Expected: {self.expected_error_message}"
         )
+        logging.error(error_message)
+        return error_message
 
 
 class ErrorTypeNotFound(Exception):
@@ -39,10 +44,12 @@ class ErrorTypeNotFound(Exception):
         self.expected_error_messages = expected_error_messages
 
     def __str__(self):
-        return (
+        error_message = (
             f"The error message type is not found: {self.error_type}. "
             f"Use one of the following types: {', '.join(self.expected_error_messages)}."
         )
+        logging.error(error_message)
+        return error_message
 
 
 class CheckLoginStatusError(Exception):
@@ -52,7 +59,9 @@ class CheckLoginStatusError(Exception):
         self.original_exception = original_exception
 
     def __str__(self):
-        return f"An error occurred while checking the login status: {self.original_exception}."
+        error_message = f"An error occurred while checking the login status: {self.original_exception}."
+        logging.error(error_message)
+        return error_message
 
 
 class LogoutError(Exception):
@@ -62,7 +71,9 @@ class LogoutError(Exception):
         self.original_exception = original_exception
 
     def __str__(self):
-        return f"An error occurred during logout: {self.original_exception}"
+        error_message = f"An error occurred during logout: {self.original_exception}"
+        logging.error(error_message)
+        return error_message
 
 
 @pytest.fixture(scope="function")
@@ -221,20 +232,11 @@ class TestLogin:
         Args:
             driver: The Selenium WebDriver object instance.
         """
-        # Unpack the credentials
         hudl_email, hudl_password = credentials
-
         driver.get("https://www.hudl.com/")
-
-        # Go to the login page from the landing page
         landing_page.go_to_login_page()
-
-        # Submit the login form
         login_page.login(hudl_email, hudl_password)
-
-        # Use the home page object to check login status
         assert home_page.is_logged_in()
-
         home_page.logout()
 
     def test_valid_login_from_the_login_page(
@@ -246,17 +248,10 @@ class TestLogin:
         Args:
             driver: The Selenium WebDriver object instance.
         """
-        # Unpack the credentials
         hudl_email, hudl_password = credentials
-
         driver.get("https://www.hudl.com/login")
-
-        # Submit the login form
         login_page.login(hudl_email, hudl_password)
-
-        # Use the home page object to check login status
         assert home_page.is_logged_in()
-
         home_page.logout()
 
     def test_invalid_email(self, login_page, credentials):
@@ -267,7 +262,6 @@ class TestLogin:
         Args:
             driver: The Selenium WebDriver object instance.
         """
-        # Unpack the credentials
         _, hudl_password = credentials
 
         # Login with an invalid email and a valid password
@@ -283,7 +277,6 @@ class TestLogin:
         Args:
             driver: The Selenium WebDriver object instance.
         """
-        # Unpack the credentials
         hudl_email, _ = credentials
 
         # Login with a valid email and an invalid password
@@ -299,6 +292,7 @@ class TestLogin:
         Args:
             driver: The Selenium WebDriver object instance.
         """
+        # Login with no email and no password
         assert login_page.login_and_check_error(
             email="", password="", error_type="empty"
         )
