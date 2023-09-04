@@ -1,17 +1,28 @@
 <p align="center">
-  <a href="https://github.com/kalenwallin/hudltakehome">
+  <a href="https://github.com/kalenwallin/hudl-take-home-test">
     <img src="https://sc.hudl.com/favicon.svg" height="96">
-    <h3 align="center">Hudl Interview Take-home Test</h3>
+    <h1 align="center">Hudl Interview Take-home Test</h3>
   </a>
 </p>
 
 <p align="center">A simple Hudl login test suite powered by Selenium.</p>
 
-# Introduction
+## Table of Contents
+
+- [Table of Contents](#table-of-contents)
+- [Introduction](#introduction)
+- [Developing Locally](#developing-locally)
+  - [Getting started](#getting-started)
+  - [Advanced Usage](#advanced-usage)
+    - [Improve Testing Speeds](#improve-testing-speeds)
+  - [Learn More](#learn-more)
+- [Lessons Learned](#lessons-learned)
+
+## Introduction
 
 This repo contains a testing suite for the Hudl login system and seeks to fulfill the requirements of the **Quality Assurance Engineer II** interview take-home test.
 
-# Developing Locally
+## Developing Locally
 
 Make sure you have Chrome, ChromeDriver, and Python 3.9 installed:
 
@@ -19,12 +30,12 @@ Make sure you have Chrome, ChromeDriver, and Python 3.9 installed:
 - [Download ChromeDriver](https://chromedriver.chromium.org/home "Download ChromeDriver")
 - [Download Python 3.9](https://www.python.org/downloads/ "Download Python 3.9")
 
-## Getting started
+### Getting started
 
 Clone the repo:
 
 ```bash
-git clone https://github.com/kalenwallin/hudl-takehome-test
+git clone https://github.com/kalenwallin/hudl-take-home-test
 ```
 
 Create a virtual environment:
@@ -39,38 +50,40 @@ Install the dependencies:
 pip install -r requirements.txt
 ```
 
-Create a `.env` file with your credentials:
+Create a `.env` file in the root directory with your credentials:
 
 ```plaintext
 HUDL_EMAIL={Email}
 HUDL_PASSWORD={Password}
 ```
 
-Run the test suite:
+All tests are located in `test_login.py` in the root directory. Run the test suite:
 
 ```bash
 pytest
 ```
 
-## Advanced Usage
+### Advanced Usage
 
-### Improve Testing Speeds
+#### Improve Testing Speeds
 
-[Selenium encourages a fresh browser per test](https://www.selenium.dev/documentation/test_practices/encouraged/fresh_browser_per_test/ "Selenium encourages a fresh browser per test") as part of their [encouraged practices](https://www.selenium.dev/documentation/test_practices/encouraged/ "Selenium Encouraged Practices") which can easily be achieved by setting fixture scopes to `function`.
+[Selenium encourages a fresh browser per test](https://www.selenium.dev/documentation/test_practices/encouraged/fresh_browser_per_test/ "Selenium encourages a fresh browser per test") as part of their [encouraged practices](https://www.selenium.dev/documentation/test_practices/encouraged/ "Selenium Encouraged Practices"). This can easily be achieved by setting fixture scopes to `function`, which is the default for this testing suite.
 
 ```python
 @pytest.fixture(scope="function")
 ```
 
-However, starting up and tearing down a browser per test is computationally expensive and tacks on a lot of time to testing. To bypass this, set all fixture scopes to `class`.
+However, starting up and tearing down a browser per test method is computationally expensive and tacks on a lot of time to testing.
+
+Since we have no data changes that will affect state, we don't need to worry about resetting the WebDriver instance. To bypass this, set all fixture scopes to `class`.
 
 ```python
 @pytest.fixture(scope="class")
 ```
 
-Doing so **increases testing speeds by approximately 58.57%**
+Doing so allows each fixture to remain active until all of `TestLogin`'s test methods are complete, thereby **increasing testing speeds by approximately 58.57%.**
 
-## Learn More
+### Learn More
 
 To learn more about Python, Selenium, and PyTest, take a look at the following resources:
 
@@ -81,7 +94,7 @@ To learn more about Python, Selenium, and PyTest, take a look at the following r
 
 ---
 
-# Lessons Learned
+## Lessons Learned
 
 I picked up several best practices and troubleshooting tips through hands-on experience.
 
