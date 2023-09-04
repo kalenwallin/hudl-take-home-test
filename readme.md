@@ -20,14 +20,12 @@
 
 ## Introduction
 
-This repo contains a testing suite for the Hudl login system and seeks to fulfill the requirements of the **Quality Assurance Engineer II** interview take-home test.
+This repository contains a testing suite for the Hudl login system and seeks to fulfill the requirements of the **Quality Assurance Engineer II** interview take-home test.
 
 ## Developing Locally
 
 > **Note:** The setup below is for a Windows environment.
-> If you're using MacOS or Linux, the process may be the same. Please see the following guides for more information:
-> - [Setting up Selenium on MacOS](https://gprivate.com/66hws)
-> - [Setting up Selenium on Linux](https://gprivate.com/66hwt)
+> If you're using MacOS or Linux, the process may or may not be the same.
 
 Make sure you have Chrome, ChromeDriver, and Python 3.9 installed:
 
@@ -37,7 +35,7 @@ Make sure you have Chrome, ChromeDriver, and Python 3.9 installed:
 
 ### Getting started
 
-Clone the repo:
+Clone the repository:
 
 ```bash
 git clone https://github.com/kalenwallin/hudl-take-home-test
@@ -72,7 +70,7 @@ pytest
 
 #### Improve Testing Speeds
 
-[Selenium encourages a fresh browser per test](https://www.selenium.dev/documentation/test_practices/encouraged/fresh_browser_per_test/ "Selenium encourages a fresh browser per test") as part of their [encouraged practices](https://www.selenium.dev/documentation/test_practices/encouraged/ "Selenium Encouraged Practices"). This can easily be achieved by setting fixture scopes to `function`, which is the default for this testing suite.
+[Selenium encourages a fresh browser per test](https://www.selenium.dev/documentation/test_practices/encouraged/fresh_browser_per_test/ "Selenium encourages a fresh browser per test") as part of their [encouraged practices](https://www.selenium.dev/documentation/test_practices/encouraged/ "Selenium Encouraged Practices"). This can easily be achieved **by setting fixture scopes to `function`, which is the default for this testing suite.**
 
 ```python
 @pytest.fixture(scope="function")
@@ -101,15 +99,15 @@ To learn more about Python, Selenium, and PyTest, take a look at the following r
 
 ## Lessons Learned
 
-I picked up several best practices and troubleshooting tips through hands-on experience.
+I picked up several best practices and troubleshooting tips through this hands-on experience.
 
-While structuring the project, I realized it's critical to set up a good .gitignore for test code. I excluded logs, reports, temp files, and the webdriver binary. This kept the repository history clean and repo size low.
+While structuring the project, I found it critical to set up a good `.gitignore` for test code. I excluded logs, reports, temp files, and the web driver binary. This kept the repository history clean and size low.
 
-On the coding side, I leveraged explicit WebDriverWait instead of sleep to synchronize with elements appearing on the page. This takes the guesswork out of waiting.
+On the coding side, I leveraged explicit `WebDriverWait` instead of `sleep` to synchronize with elements appearing on the page. This took the guesswork out of waiting.
 
-Additionally, I implemented robust exception handling and raising using try/except blocks and custom exceptions. This allowed me to catch flaky tests during the development stage when I thought I had the correct implementation.
+Additionally, I implemented robust exception handling and raising using try/except blocks and custom exceptions. This allowed me to catch flaky tests during the development stage, especially when I thought I had the correct implementation.
 
-Overall, through hands-on work, I learned techniques for best practices, synchronization, and error handling. Let me know if you need me to elaborate on any specific lessons from working on the automation project!
+Overall, through hands-on work, I learned techniques for best practices, synchronization, and error handling. Let me know if you need me to elaborate on any specific lessons from working on this take-home test!
 
 ---
 
