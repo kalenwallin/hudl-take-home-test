@@ -77,6 +77,7 @@ To learn more about Python, Selenium, and PyTest, take a look at the following r
 - [Python Documentation](https://docs.python.org/ "Learn more about using Python") - Learn more about using Python
 - [Selenium Documentation](https://www.selenium.dev/ "Learn more about using Selenium") - Learn more about using Selenium
 - [Selenium PyPi Documentation](https://pypi.org/project/selenium/ "Learn more about using Selenium with Python") - Learn more about using Selenium with Python
+- [Selenium Best Practices](https://www.selenium.dev/documentation/test_practices/ "Selenium Best Practices") - Learn more about using Selenium in accordance with guidelines and recommendations from the Selenium Project.
 
 ---
 
