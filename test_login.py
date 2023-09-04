@@ -1,3 +1,4 @@
+import configparser
 import logging
 import os
 
@@ -8,10 +9,6 @@ from selenium.common.exceptions import TimeoutException, WebDriverException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
-
-LANDING_URL = "https://www.hudl.com/"
-LOGIN_URL = "https://www.hudl.com/login"
-LOGOUT_URL = "https://www.hudl.com/logout"
 
 
 class LoginErrorMessageMismatch(Exception):
@@ -85,7 +82,7 @@ class LogoutError(Exception):
 @pytest.fixture(scope="function")
 def driver():
     """
-    Sets up and tears down a WebDriver instance.
+    Fixture that sets up and tears down a WebDriver instance.
 
     Yields:
         A WebDriver instance.
@@ -93,48 +90,6 @@ def driver():
     driver = webdriver.Chrome()
     yield driver
     driver.quit()
-
-
-@pytest.fixture(scope="function")
-def login_page(driver):
-    """
-    Fixture for the login page.
-
-    Args:
-        driver (WebDriver): The WebDriver object used to interact with the browser.
-
-    Returns:
-        LoginPage: The login page object.
-    """
-    return LoginPage(driver)
-
-
-@pytest.fixture(scope="function")
-def landing_page(driver):
-    """
-    Fixture for the landing page.
-
-    Args:
-        driver (WebDriver): The WebDriver object used to interact with the browser.
-
-    Returns:
-        LandingPage: The landing page object.
-    """
-    return LandingPage(driver)
-
-
-@pytest.fixture(scope="function")
-def home_page(driver):
-    """
-    Fixture for the home page.
-
-    Args:
-        driver (WebDriver): The WebDriver object used to interact with the browser.
-
-    Returns:
-        HomePage: The home page object.
-    """
-    return HomePage(driver)
 
 
 @pytest.fixture(scope="function")
@@ -153,6 +108,68 @@ def credentials():
             "Required environment variables HUDL_EMAIL or HUDL_PASSWORD are not set!"
         )
     return hudl_email, hudl_password
+
+
+@pytest.fixture(scope="function")
+def config():
+    """
+    Fixture that returns URLs from the config file.
+
+    Returns:
+        Dict: A dictionary of Hudl.com URLs.
+    """
+    config = configparser.ConfigParser()
+    config.read("config.ini")
+
+    urls = {
+        "LANDING_URL": config.get("URLs", "LANDING_URL"),
+        "LOGIN_URL": config.get("URLs", "LOGIN_URL"),
+        "LOGOUT_URL": config.get("URLs", "LOGOUT_URL"),
+    }
+
+    return urls
+
+
+@pytest.fixture(scope="function")
+def landing_page(driver):
+    """
+    Fixture for the landing page object.
+
+    Args:
+        driver (WebDriver): The WebDriver object used to interact with the browser.
+
+    Returns:
+        LandingPage: The landing page object.
+    """
+    return LandingPage(driver)
+
+
+@pytest.fixture(scope="function")
+def login_page(driver, config):
+    """
+    Fixture for the login page object.
+
+    Args:
+        driver (WebDriver): The WebDriver object used to interact with the browser.
+
+    Returns:
+        LoginPage: The login page object.
+    """
+    return LoginPage(driver, config)
+
+
+@pytest.fixture(scope="function")
+def home_page(driver, config):
+    """
+    Fixture for the home page object.
+
+    Args:
+        driver (WebDriver): The WebDriver object used to interact with the browser.
+
+    Returns:
+        HomePage: The home page object.
+    """
+    return HomePage(driver, config)
 
 
 class LandingPage:
@@ -182,8 +199,9 @@ class LandingPage:
 
 
 class LoginPage:
-    def __init__(self, driver):
+    def __init__(self, driver, config):
         self.driver = driver
+        self.config = config
 
     def enter_email(self, email):
         """
@@ -273,7 +291,7 @@ class LoginPage:
         Returns:
             True if the error message matches, False otherwise.
         """
-        self.driver.get(LOGIN_URL)
+        self.driver.get(self.config["LOGIN_URL"])
 
         # Login using the provided credentials
         self.login(email, password)
@@ -283,12 +301,14 @@ class LoginPage:
 
 
 class HomePage:
-    def __init__(self, driver):
+    def __init__(self, driver, config):
         self.driver = driver
+        self.config = config
 
     def is_logged_in(self):
         """
-        Checks if the user is logged in by checking if the logout button is present.
+        Home Page: Checks if the user is logged in by checking if the logout
+        button is present.
 
         Raises:
             CheckLoginStatusError: If there is a WebDriverException or TimeoutException
@@ -308,7 +328,7 @@ class HomePage:
 
     def logout(self):
         """
-        Logout the user from the application.
+        Home Page: Logout the user from the application.
 
         Raises:
             LogoutError: If there is a WebDriverException or TimeoutException
@@ -319,47 +339,51 @@ class HomePage:
             out, False otherwise.
         """
         try:
-            self.driver.get(LOGOUT_URL)
-            return WebDriverWait(self.driver, 10).until(EC.url_matches(LANDING_URL))
+            self.driver.get(self.config["LOGOUT_URL"])
+            return WebDriverWait(self.driver, 10).until(
+                EC.url_matches(self.config["LANDING_URL"])
+            )
         except (WebDriverException, TimeoutException) as e:
             raise LogoutError(e)
 
 
 class TestLogin:
     def test_valid_login_from_the_landing_page(
-        self, driver, landing_page, login_page, home_page, credentials
+        self, driver, config, landing_page, login_page, home_page, credentials
     ):
         """
         Test a valid login from the landing page
 
         Args:
             driver: The Selenium WebDriver object instance.
+            config: The local config dictionary.
             landing_page: The LandingPage object instance.
             login_page: The LoginPage object instance.
             home_page: The HomePage object instance.
             credentials: A tuple containing the HUDL email and password.
         """
         hudl_email, hudl_password = credentials
-        driver.get(LANDING_URL)
+        driver.get(config["LANDING_URL"])
         landing_page.go_to_login_page()
         login_page.login(hudl_email, hudl_password)
         assert home_page.is_logged_in()
         home_page.logout()
 
     def test_valid_login_from_the_login_page(
-        self, driver, login_page, home_page, credentials
+        self, driver, config, login_page, home_page, credentials
     ):
         """
         Test a valid login from the login page.
 
         Args:
             driver: The Selenium WebDriver object instance.
+            config: The local config dictionary.
             login_page: The LoginPage object instance.
             home_page: The HomePage object instance.
             credentials: A tuple containing the HUDL email and password.
         """
         hudl_email, hudl_password = credentials
-        driver.get(LOGIN_URL)
+        driver.get(config["LOGIN_URL"])
         login_page.login(hudl_email, hudl_password)
         assert home_page.is_logged_in()
         home_page.logout()
