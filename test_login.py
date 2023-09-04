@@ -159,13 +159,13 @@ class LandingPage:
     def __init__(self, driver):
         self.driver = driver
 
-    def click_login_select(self):
+    def click_login_dropdown(self):
         """
         Landing Page: Clicks on the login select element.
         """
         self.driver.find_element(By.CSS_SELECTOR, "[data-qa-id='login-select']").click()
 
-    def click_login_select_hudl(self):
+    def select_hudl_from_dropdown(self):
         """
         Landing Page: Clicks on the Hudl button from the login select menu.
         """
@@ -176,8 +176,8 @@ class LandingPage:
         Landing Page: Navigates to the login page by clicking on the login
         select button and selecting the Hudl option.
         """
-        self.click_login_select()
-        self.click_login_select_hudl()
+        self.click_login_dropdown()
+        self.select_hudl_from_dropdown()
         WebDriverWait(self.driver, 10).until(EC.title_is("Log In"))
 
 
