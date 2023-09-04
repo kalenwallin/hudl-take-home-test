@@ -90,16 +90,15 @@ class LandingPage:
         self.driver = driver
 
     def click_login_select(self):
-        login_select = self.driver.find_element(
-            By.CSS_SELECTOR, "[data-qa-id='login-select']"
-        )
-        login_select.click()
+        self.driver.find_element(By.CSS_SELECTOR, "[data-qa-id='login-select']").click()
 
     def click_login_select_hudl(self):
-        login_hudl = self.driver.find_element(
-            By.CSS_SELECTOR, "[data-qa-id='login-hudl']"
-        )
-        login_hudl.click()
+        self.driver.find_element(By.CSS_SELECTOR, "[data-qa-id='login-hudl']").click()
+
+    def go_to_login_page(self):
+        self.click_login_select()
+        self.click_login_select_hudl()
+        WebDriverWait(self.driver, 10).until(EC.title_is("Log In"))
 
 
 class LoginPage:
@@ -107,18 +106,16 @@ class LoginPage:
         self.driver = driver
 
     def enter_email(self, email):
-        email_field = self.driver.find_element(By.ID, "email")
-        email_field.send_keys(email)
+        self.driver.find_element(By.ID, "email").send_keys(email)
 
     def enter_password(self, password):
-        password_field = self.driver.find_element(By.ID, "password")
-        password_field.send_keys(password)
+        self.driver.find_element(By.ID, "password").send_keys(password)
 
     def click_login(self):
-        login_button = self.driver.find_element(By.ID, "logIn")
-        login_button.click()
+        self.driver.find_element(By.ID, "logIn").click()
 
     def login(self, email, password):
+        WebDriverWait(self.driver, 10).until(EC.title_is("Log In"))
         self.enter_email(email)
         self.enter_password(password)
         self.click_login()
@@ -213,8 +210,7 @@ class TestLogin:
         driver.get("https://www.hudl.com/")
 
         # Go to the login page from the landing page
-        landing_page.click_login_select()
-        landing_page.click_login_select_hudl()
+        landing_page.go_to_login_page()
 
         # Submit the login form
         login_page.login(hudl_email, hudl_password)
