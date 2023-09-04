@@ -75,7 +75,7 @@ pytest
 
 However, starting up and tearing down a browser per test method is computationally expensive and tacks on a lot of time to testing.
 
-Since we have no data changes that will affect state, we don't need to worry about resetting the WebDriver instance. To bypass this, set all fixture scopes to `class`.
+Since logging in is the only data change that will affect state, we just have to log out to avoid resetting the WebDriver instance. **To leverage this, set all fixture scopes to `class`.**
 
 ```python
 @pytest.fixture(scope="class")
