@@ -6,7 +6,8 @@ from selenium import webdriver
 from selenium.common.exceptions import TimeoutException, WebDriverException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.expected_conditions import visibility_of_element_located
+from selenium.webdriver.support.expected_conditions import \
+    visibility_of_element_located
 from selenium.webdriver.support.ui import WebDriverWait
 
 
@@ -45,6 +46,16 @@ class ErrorTypeNotFound(Exception):
         )
 
 
+class CheckLoginStatusError(Exception):
+    """Raised when errors occur while checking the login status."""
+
+    def __init__(self, original_exception):
+        self.original_exception = original_exception
+
+    def __str__(self):
+        return f"An error occurred while checking the login status: {self.original_exception}."
+
+
 class LogoutError(Exception):
     """Raised when errors occur during the logout process."""
 
@@ -55,29 +66,29 @@ class LogoutError(Exception):
         return f"An error occurred during logout: {self.original_exception}"
 
 
-@pytest.fixture(scope="class")
+@pytest.fixture(scope="function")
 def driver():
     driver = webdriver.Chrome()
     yield driver
     driver.quit()
 
 
-@pytest.fixture(scope="class")
+@pytest.fixture(scope="function")
 def login_page(driver):
     return LoginPage(driver)
 
 
-@pytest.fixture(scope="class")
+@pytest.fixture(scope="function")
 def landing_page(driver):
     return LandingPage(driver)
 
 
-@pytest.fixture(scope="class")
+@pytest.fixture(scope="function")
 def home_page(driver):
     return HomePage(driver)
 
 
-@pytest.fixture(scope="class")
+@pytest.fixture(scope="function")
 def credentials():
     load_dotenv()
     hudl_email = os.getenv("HUDL_EMAIL")
@@ -178,11 +189,14 @@ class HomePage:
         self.driver = driver
 
     def is_logged_in(self):
-        return WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located(
-                (By.CSS_SELECTOR, "[data-qa-id='webnav-usermenu-logout']")
+        try:
+            return WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located(
+                    (By.CSS_SELECTOR, "[data-qa-id='webnav-usermenu-logout']")
+                )
             )
-        )
+        except (WebDriverException, TimeoutException) as e:
+            raise CheckLoginStatusError(e)
 
     def logout(self):
         try:
