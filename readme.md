@@ -24,6 +24,11 @@ This repo contains a testing suite for the Hudl login system and seeks to fulfil
 
 ## Developing Locally
 
+> **Note:** The setup below is for a Windows environment.
+> If you're using MacOS or Linux, the process may be the same. Please see the following guides for more information:
+> - [Setting up Selenium on MacOS](https://gprivate.com/66hws)
+> - [Setting up Selenium on Linux](https://gprivate.com/66hwt)
+
 Make sure you have Chrome, ChromeDriver, and Python 3.9 installed:
 
 - [Download Google Chrome](https://www.google.com/chrome/ "Download Google Chrome")
