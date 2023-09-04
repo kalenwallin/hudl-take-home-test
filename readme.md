@@ -5,7 +5,7 @@
   </a>
 </p>
 
-<p align="center">A simple Hudl login test suite built with Selenium.</p>
+<p align="center">A simple Hudl login test suite powered by Selenium.</p>
 
 # Introduction
 
