@@ -6,8 +6,7 @@ from selenium import webdriver
 from selenium.common.exceptions import TimeoutException, WebDriverException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.expected_conditions import \
-    visibility_of_element_located
+from selenium.webdriver.support.expected_conditions import visibility_of_element_located
 from selenium.webdriver.support.ui import WebDriverWait
 
 
@@ -93,6 +92,10 @@ def credentials():
     load_dotenv()
     hudl_email = os.getenv("HUDL_EMAIL")
     hudl_password = os.getenv("HUDL_PASSWORD")
+    if hudl_email is None or hudl_password is None:
+        raise Exception(
+            "Required environment variables HUDL_EMAIL or HUDL_PASSWORD are not set!"
+        )
     return hudl_email, hudl_password
 
 
