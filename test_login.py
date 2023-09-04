@@ -7,17 +7,11 @@ from selenium import webdriver
 from selenium.common.exceptions import TimeoutException, WebDriverException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.expected_conditions import visibility_of_element_located
 from selenium.webdriver.support.ui import WebDriverWait
 
-
-class LoginErrorMessageNotDisplayed(Exception):
-    """Raised when the login error message is not displayed."""
-
-    def __str__(self):
-        error_message = "The login error message is not displayed."
-        logging.error(error_message)
-        return error_message
+LANDING_URL = "https://www.hudl.com/"
+LOGIN_URL = "https://www.hudl.com/login"
+LOGOUT_URL = "https://www.hudl.com/logout"
 
 
 class LoginErrorMessageMismatch(Exception):
@@ -64,6 +58,18 @@ class CheckLoginStatusError(Exception):
         return error_message
 
 
+class LoginError(Exception):
+    """Raised when errors occur during the login process."""
+
+    def __init__(self, original_exception):
+        self.original_exception = original_exception
+
+    def __str__(self):
+        error_message = f"An error occurred during login: {self.original_exception}"
+        logging.error(error_message)
+        return error_message
+
+
 class LogoutError(Exception):
     """Raised when errors occur during the logout process."""
 
@@ -78,6 +84,12 @@ class LogoutError(Exception):
 
 @pytest.fixture(scope="function")
 def driver():
+    """
+    Sets up and tears down a WebDriver instance.
+
+    Yields:
+        A WebDriver instance.
+    """
     driver = webdriver.Chrome()
     yield driver
     driver.quit()
@@ -85,21 +97,54 @@ def driver():
 
 @pytest.fixture(scope="function")
 def login_page(driver):
+    """
+    Fixture for the login page.
+
+    Args:
+        driver (WebDriver): The WebDriver object used to interact with the browser.
+
+    Returns:
+        LoginPage: The login page object.
+    """
     return LoginPage(driver)
 
 
 @pytest.fixture(scope="function")
 def landing_page(driver):
+    """
+    Fixture for the landing page.
+
+    Args:
+        driver (WebDriver): The WebDriver object used to interact with the browser.
+
+    Returns:
+        LandingPage: The landing page object.
+    """
     return LandingPage(driver)
 
 
 @pytest.fixture(scope="function")
 def home_page(driver):
+    """
+    Fixture for the home page.
+
+    Args:
+        driver (WebDriver): The WebDriver object used to interact with the browser.
+
+    Returns:
+        HomePage: The home page object.
+    """
     return HomePage(driver)
 
 
 @pytest.fixture(scope="function")
 def credentials():
+    """
+    Fixture that returns hudl credentials from the environment.
+
+    Returns:
+        Tuple: A tuple containing the HUDL email and password.
+    """
     load_dotenv()
     hudl_email = os.getenv("HUDL_EMAIL")
     hudl_password = os.getenv("HUDL_PASSWORD")
@@ -115,12 +160,22 @@ class LandingPage:
         self.driver = driver
 
     def click_login_select(self):
+        """
+        Landing Page: Clicks on the login select element.
+        """
         self.driver.find_element(By.CSS_SELECTOR, "[data-qa-id='login-select']").click()
 
     def click_login_select_hudl(self):
+        """
+        Landing Page: Clicks on the Hudl button from the login select menu.
+        """
         self.driver.find_element(By.CSS_SELECTOR, "[data-qa-id='login-hudl']").click()
 
     def go_to_login_page(self):
+        """
+        Landing Page: Navigates to the login page by clicking on the login
+        select button and selecting the Hudl option.
+        """
         self.click_login_select()
         self.click_login_select_hudl()
         WebDriverWait(self.driver, 10).until(EC.title_is("Log In"))
@@ -131,27 +186,54 @@ class LoginPage:
         self.driver = driver
 
     def enter_email(self, email):
+        """
+        Login Page: Enter the given email into the email field.
+
+        Args:
+            email (str): The email to be entered.
+        """
         self.driver.find_element(By.ID, "email").send_keys(email)
 
     def enter_password(self, password):
+        """
+        Login Page: Enter the given password into the password field.
+
+        Args:
+            password (str): The password to enter into the password field.
+        """
         self.driver.find_element(By.ID, "password").send_keys(password)
 
     def click_login(self):
+        """
+        Login Page: Clicks the login button.
+        """
         self.driver.find_element(By.ID, "logIn").click()
 
     def login(self, email, password):
-        WebDriverWait(self.driver, 10).until(EC.title_is("Log In"))
-        self.enter_email(email)
-        self.enter_password(password)
-        self.click_login()
+        """
+        Login Page: Logs in to Hudl using the provided email and password.
+
+        Args:
+            email (str): The email address of the user.
+            password (str): The password of the user.
+
+        Raises:
+            LoginError: If there is an error during the login process.
+        """
+        try:
+            WebDriverWait(self.driver, 10).until(EC.title_is("Log In"))
+            self.enter_email(email)
+            self.enter_password(password)
+            self.click_login()
+        except (WebDriverException, TimeoutException) as e:
+            raise LoginError(e)
 
     def is_login_error_message(self, error_type):
         """
-        Checks that the error message displayed on the login form matches
-        the expected error message based on the given type.
+        Login Page: Checks that the error message displayed on the login form
+        matches the expected error message based on the given type.
 
         Args:
-            driver: The Selenium WebDriver object instance.
             error_type (str): The type of error message to check.
 
         Returns:
@@ -159,27 +241,29 @@ class LoginPage:
         """
         error_msg_selector = "[data-qa-id='undefined-text']"
         error_msg = WebDriverWait(self.driver, 10).until(
-            visibility_of_element_located((By.CSS_SELECTOR, error_msg_selector))
+            EC.visibility_of_element_located((By.CSS_SELECTOR, error_msg_selector))
         )
-        if error_msg.is_displayed():
-            expected_error_messages = {
-                "email": "We don't recognize that email and/or password",
-                "password": "We don't recognize that email and/or password",
-                "empty": "Please fill in all of the required fields",
-            }
-            expected_error_message = expected_error_messages.get(error_type)
-            if expected_error_message is None:
-                raise ErrorTypeNotFound(error_type, expected_error_messages.keys())
-            if error_msg.text != expected_error_message:
-                raise LoginErrorMessageMismatch(error_msg.text, expected_error_message)
-            else:
-                return True
+
+        expected_error_messages = {
+            "email": "We don't recognize that email and/or password",
+            "password": "We don't recognize that email and/or password",
+            "empty": "Please fill in all of the required fields",
+        }
+
+        expected_error_message = expected_error_messages.get(error_type)
+
+        if not expected_error_message:
+            raise ErrorTypeNotFound(error_type, expected_error_messages.keys())
+
+        if error_msg.is_displayed() and error_msg.text == expected_error_message:
+            return True
         else:
-            raise LoginErrorMessageNotDisplayed()
+            raise LoginErrorMessageMismatch(error_msg.text, expected_error_message)
 
     def login_and_check_error(self, email, password, error_type):
         """
-        Login using the provided credentials and check for a specific error message.
+        Login Page: Login using the provided credentials and check for a
+        specific error message.
 
         Args:
             email: The email to use for login.
@@ -189,7 +273,7 @@ class LoginPage:
         Returns:
             True if the error message matches, False otherwise.
         """
-        self.driver.get("https://www.hudl.com/login")
+        self.driver.get(LOGIN_URL)
 
         # Login using the provided credentials
         self.login(email, password)
@@ -203,6 +287,16 @@ class HomePage:
         self.driver = driver
 
     def is_logged_in(self):
+        """
+        Checks if the user is logged in by checking if the logout button is present.
+
+        Raises:
+            CheckLoginStatusError: If there is a WebDriverException or TimeoutException
+            while checking the login status.
+
+        Returns:
+            bool: True if the logout button is present, False otherwise.
+        """
         try:
             return WebDriverWait(self.driver, 10).until(
                 EC.presence_of_element_located(
@@ -213,11 +307,20 @@ class HomePage:
             raise CheckLoginStatusError(e)
 
     def logout(self):
+        """
+        Logout the user from the application.
+
+        Raises:
+            LogoutError: If there is a WebDriverException or TimeoutException
+            during the logout process.
+
+        Returns:
+            bool: True if the url matches LANDING_URL after logging
+            out, False otherwise.
+        """
         try:
-            self.driver.get("https://www.hudl.com/logout")
-            WebDriverWait(self.driver, 10).until(
-                EC.url_matches("https://www.hudl.com/")
-            )
+            self.driver.get(LOGOUT_URL)
+            return WebDriverWait(self.driver, 10).until(EC.url_matches(LANDING_URL))
         except (WebDriverException, TimeoutException) as e:
             raise LogoutError(e)
 
@@ -227,13 +330,17 @@ class TestLogin:
         self, driver, landing_page, login_page, home_page, credentials
     ):
         """
-        Tests a valid login from the landing page
+        Test a valid login from the landing page
 
         Args:
             driver: The Selenium WebDriver object instance.
+            landing_page: The LandingPage object instance.
+            login_page: The LoginPage object instance.
+            home_page: The HomePage object instance.
+            credentials: A tuple containing the HUDL email and password.
         """
         hudl_email, hudl_password = credentials
-        driver.get("https://www.hudl.com/")
+        driver.get(LANDING_URL)
         landing_page.go_to_login_page()
         login_page.login(hudl_email, hudl_password)
         assert home_page.is_logged_in()
@@ -247,9 +354,12 @@ class TestLogin:
 
         Args:
             driver: The Selenium WebDriver object instance.
+            login_page: The LoginPage object instance.
+            home_page: The HomePage object instance.
+            credentials: A tuple containing the HUDL email and password.
         """
         hudl_email, hudl_password = credentials
-        driver.get("https://www.hudl.com/login")
+        driver.get(LOGIN_URL)
         login_page.login(hudl_email, hudl_password)
         assert home_page.is_logged_in()
         home_page.logout()
@@ -257,10 +367,13 @@ class TestLogin:
     def test_invalid_email(self, login_page, credentials):
         """
         Test the behavior of the login form when an invalid email is provided.
-        Expects "We don't recognize that email and/or password" UI error message
+
+        Expects:
+            "We don't recognize that email and/or password" UI error message
 
         Args:
-            driver: The Selenium WebDriver object instance.
+            login_page: The LoginPage object instance.
+            credentials: A tuple containing the HUDL email and password.
         """
         _, hudl_password = credentials
 
@@ -272,10 +385,13 @@ class TestLogin:
     def test_invalid_password(self, login_page, credentials):
         """
         Test the behavior of the login form when an invalid password is provided.
-        Expects "We don't recognize that email and/or password" UI error message
+
+        Expects:
+            "We don't recognize that email and/or password" UI error message
 
         Args:
-            driver: The Selenium WebDriver object instance.
+            login_page: The LoginPage object instance.
+            credentials: A tuple containing the HUDL email and password.
         """
         hudl_email, _ = credentials
 
@@ -287,10 +403,12 @@ class TestLogin:
     def test_empty_credentials(self, login_page):
         """
         Test the behavior of the login form when empty credentials are provided.
-        Expects "Please fill in all of the required fields" UI error message
+
+        Expects:
+            "Please fill in all of the required fields" UI error message
 
         Args:
-            driver: The Selenium WebDriver object instance.
+            login_page: The LoginPage object instance.
         """
         # Login with no email and no password
         assert login_page.login_and_check_error(
