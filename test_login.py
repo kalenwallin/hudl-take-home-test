@@ -149,7 +149,7 @@ def credentials():
     hudl_email = os.getenv("HUDL_EMAIL")
     hudl_password = os.getenv("HUDL_PASSWORD")
     if hudl_email is None or hudl_password is None:
-        raise Exception(
+        raise EnvironmentError(
             "Required environment variables HUDL_EMAIL or HUDL_PASSWORD are not set!"
         )
     return hudl_email, hudl_password
