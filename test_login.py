@@ -257,9 +257,10 @@ class LoginPage:
         Returns:
             bool: True if the error message matches, False otherwise.
         """
-        error_msg_selector = "[data-qa-id='undefined-text']"
         error_msg = WebDriverWait(self.driver, 10).until(
-            EC.visibility_of_element_located((By.CSS_SELECTOR, error_msg_selector))
+            EC.visibility_of_element_located(
+                By.CSS_SELECTOR, "[data-qa-id='undefined-text']"
+            )
         )
 
         expected_error_messages = {
