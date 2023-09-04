@@ -52,6 +52,24 @@ Run the test suite:
 pytest
 ```
 
+## Advanced Usage
+
+### Improve Testing Speeds
+
+[Selenium encourages a fresh browser per test](https://www.selenium.dev/documentation/test_practices/encouraged/fresh_browser_per_test/ "Selenium encourages a fresh browser per test") as part of their [encouraged practices](https://www.selenium.dev/documentation/test_practices/encouraged/ "Selenium Encouraged Practices") which can easily be achieved by setting fixture scopes to `function`.
+
+```python
+@pytest.fixture(scope="function")
+```
+
+However, starting up and tearing down a browser per test is computationally expensive and tacks on a lot of time to testing. To bypass this, set all fixture scopes to `class`.
+
+```python
+@pytest.fixture(scope="class")
+```
+
+Doing so **increases testing speeds by approximately 58.57%**
+
 ## Learn More
 
 To learn more about Python, Selenium, and PyTest, take a look at the following resources:
@@ -76,6 +94,6 @@ Overall, through hands-on work, I learned techniques for best practices, synchro
 
 ---
 
-Made with 💖 in Lincoln, NE
+Made with [💖](https://kalenwallin.com/easter-egg "Woah, you found an Easter Egg!") in Lincoln, NE
 
 [Kalen Wallin](https://github.com/kalenwallin/ "Kalen's GitHub Profile")
