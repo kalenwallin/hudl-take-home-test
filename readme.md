@@ -1,7 +1,7 @@
 <p align="center">
   <a href="https://github.com/kalenwallin/hudl-take-home-test">
     <img src="https://sc.hudl.com/favicon.svg" height="96">
-    <h1 align="center">Hudl Interview Take-home Test</h3>
+    <h3 align="center">Hudl Interview Take-home Test</h3>
   </a>
 </p>
 
