@@ -259,7 +259,7 @@ class LoginPage:
         """
         error_msg = WebDriverWait(self.driver, 10).until(
             EC.visibility_of_element_located(
-                By.CSS_SELECTOR, "[data-qa-id='undefined-text']"
+                (By.CSS_SELECTOR, "[data-qa-id='undefined-text']")
             )
         )
 
